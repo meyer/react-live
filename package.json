@@ -1,6 +1,6 @@
 {
   "name": "@meyer/react-live",
-  "version": "2.2.2-alpha.6",
+  "version": "2.2.2-alpha.7",
   "description": "A production-focused playground for live editing React code",
   "sideEffects": false,
   "main": "dist/index.js",
@@ -58,13 +58,8 @@
     "testURL": "http://localhost/"
   },
   "dependencies": {
-    "core-js": "^2.4.1",
-    "create-react-context": "0.2.2",
-    "dom-iterator": "^1.0.0",
     "prism-react-renderer": "^1.0.1",
-    "prop-types": "^15.5.8",
-    "react-simple-code-editor": "^0.10.0",
-    "unescape": "^1.0.1"
+    "react-simple-code-editor": "^0.10.0"
   },
   "devDependencies": {
     "@storybook/addon-knobs": "^3.3.12",
