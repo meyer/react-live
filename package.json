@@ -1,6 +1,6 @@
 {
   "name": "@meyer/react-live",
-  "version": "2.2.2-alpha.4",
+  "version": "2.2.2-alpha.6",
   "description": "A production-focused playground for live editing React code",
   "sideEffects": false,
   "main": "dist/index.js",
@@ -58,7 +58,6 @@
     "testURL": "http://localhost/"
   },
   "dependencies": {
-    "buble": "0.19.6",
     "core-js": "^2.4.1",
     "create-react-context": "0.2.2",
     "dom-iterator": "^1.0.0",
@@ -70,7 +69,6 @@
   "devDependencies": {
     "@storybook/addon-knobs": "^3.3.12",
     "@storybook/react": "^3.3.12",
-    "@types/buble": "^0.19.2",
     "@types/jest": "^24.0.21",
     "@types/react": "^16.0.36",
     "@types/react-dom": "^16.9.3",

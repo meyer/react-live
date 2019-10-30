@@ -5,9 +5,10 @@ import {
   generateElement,
   renderElementAsync,
   RenderElementAsyncParams,
+  TranspileFn,
 } from '../utils/transpile';
 import { Language, PrismTheme } from 'prism-react-renderer';
-import { ErrorBoundary } from '../utils/transpile/errorBoundary';
+import { ErrorBoundary } from '../hoc/withErrorBoundary';
 
 export interface LiveProviderProps {
   code: string;
@@ -16,7 +17,7 @@ export interface LiveProviderProps {
   noInline?: boolean;
   scope?: Record<string, any>;
   theme?: PrismTheme;
-  transformCode?: any;
+  transpile: TranspileFn;
 }
 
 interface LiveProviderState {
@@ -28,7 +29,7 @@ interface LiveProviderState {
 interface TranspileOptions {
   code: string;
   scope?: Record<string, any>;
-  transformCode?: any;
+  transpile: TranspileFn;
   noInline?: boolean;
 }
 
@@ -45,31 +46,31 @@ export class LiveProvider extends React.Component<
 
   // eslint-disable-next-line camelcase
   UNSAFE_componentWillMount() {
-    const { code, scope, transformCode, noInline } = this.props;
+    const { code, scope, transpile, noInline } = this.props;
 
-    this.transpile({ code, scope, transformCode, noInline });
+    this.transpile({ code, scope, transpile, noInline });
   }
 
   componentDidUpdate({
     code: prevCode,
     scope: prevScope,
     noInline: prevNoInline,
-    transformCode: prevTransformCode,
+    transpile: prevTranspile,
   }: LiveProviderProps) {
-    const { code, scope, noInline, transformCode } = this.props;
+    const { code, scope, noInline, transpile } = this.props;
     if (
       code !== prevCode ||
       scope !== prevScope ||
       noInline !== prevNoInline ||
-      transformCode !== prevTransformCode
+      transpile !== prevTranspile
     ) {
-      this.transpile({ code, scope, transformCode, noInline });
+      this.transpile({ code, scope, transpile, noInline });
     }
   }
 
   onChange = (code: string): void => {
-    const { scope, transformCode, noInline } = this.props;
-    this.transpile({ code, scope, transformCode, noInline });
+    const { scope, transpile, noInline } = this.props;
+    this.transpile({ code, scope, transpile, noInline });
   };
 
   onError = (error: any): void => {
@@ -77,11 +78,11 @@ export class LiveProvider extends React.Component<
   };
 
   transpile = (options: TranspileOptions) => {
-    const { code, scope, transformCode, noInline = false } = options;
+    const { code, scope, transpile, noInline = false } = options;
 
     // Transpilation arguments
     const input: RenderElementAsyncParams = {
-      code: transformCode ? transformCode(code) : code,
+      code: transpile ? transpile(code) : code,
       scope,
     };
 
@@ -97,9 +98,9 @@ export class LiveProvider extends React.Component<
     try {
       if (noInline) {
         this.setState({ ...state, element: null }); // Reset output for async (no inline) evaluation
-        renderElementAsync(input, renderElement, errorCallback);
+        renderElementAsync(input, transpile, renderElement, errorCallback);
       } else {
-        renderElement(generateElement(input, errorCallback));
+        renderElement(generateElement(input, transpile, errorCallback));
       }
     } catch (error) {
       this.setState({ ...state, error: error.toString() });

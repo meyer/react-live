@@ -2,9 +2,9 @@ import * as React from 'react';
 
 export type ElementOrComponent = React.FC | React.ReactElement;
 
-export type ErrorBoundary = ReturnType<typeof errorBoundary>;
+export type ErrorBoundary = ReturnType<typeof withErrorBoundary>;
 
-export const errorBoundary = (
+export const withErrorBoundary = (
   elementOrComponent: ElementOrComponent,
   errorCallback: (err: any) => void
 ) => {
