@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import styled from 'styled-components';
 import * as polished from 'polished';
 import { ProjectBadge } from 'formidable-oss-badges';

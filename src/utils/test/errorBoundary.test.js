@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import errorBoundary from '../transpile/errorBoundary';
 import { render } from 'enzyme';
 

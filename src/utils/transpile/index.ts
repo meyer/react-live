@@ -1,8 +1,11 @@
-import transform from './transform';
-import errorBoundary from './errorBoundary';
-import evalCode from './evalCode';
+import { transform } from './transform';
+import { errorBoundary, ElementOrComponent } from './errorBoundary';
+import { evalCode } from './evalCode';
 
-export const generateElement = ({ code = '', scope = {} }, errorCallback) => {
+export const generateElement = (
+  { code = '', scope = {} },
+  errorCallback: (err: any) => void
+) => {
   // NOTE: Remove trailing semicolon to get an actual expression.
   const codeTrimmed = code.trim().replace(/;$/, '');
 
@@ -11,13 +14,20 @@ export const generateElement = ({ code = '', scope = {} }, errorCallback) => {
   return errorBoundary(evalCode(transformed, scope), errorCallback);
 };
 
+export interface RenderElementAsyncParams {
+  code: string;
+  scope?: Record<string, any>;
+}
+
 export const renderElementAsync = (
-  { code = '', scope = {} },
-  resultCallback,
-  errorCallback
+  params: RenderElementAsyncParams,
+  resultCallback: (result: any) => void,
+  errorCallback: (err: any) => void
   // eslint-disable-next-line consistent-return
 ) => {
-  const render = element => {
+  const { code = '', scope = {} } = params;
+
+  const render = (element: ElementOrComponent) => {
     if (typeof element === 'undefined') {
       errorCallback(new SyntaxError('`render` must be called with valid JSX.'));
     } else {

@@ -1,20 +1,23 @@
-import React, { Component, Fragment } from 'react';
-import PropTypes from 'prop-types';
+import * as React from 'react';
 import Editor from 'react-simple-code-editor';
-import Highlight, { Prism } from 'prism-react-renderer';
-import { theme as liveTheme } from '../../constants/theme';
+import Highlight, { Prism, Language, PrismTheme } from 'prism-react-renderer';
+import { theme as liveTheme } from '../constants/theme';
 
-class CodeEditor extends Component {
-  static propTypes = {
-    code: PropTypes.string,
-    disabled: PropTypes.boolean,
-    language: PropTypes.string,
-    onChange: PropTypes.func,
-    style: PropTypes.object,
-    theme: PropTypes.object
+export interface CodeEditorProps {
+  code: string;
+  disabled: boolean;
+  language: Language;
+  onChange: (newCode: string) => void;
+  style: object;
+  theme?: PrismTheme;
+}
+
+export class CodeEditor extends React.Component<CodeEditorProps> {
+  state = {
+    code: '',
   };
 
-  static getDerivedStateFromProps(props, state) {
+  static getDerivedStateFromProps(props: any, state: any) {
     if (props.code !== state.prevCodeProp) {
       return { code: props.code, prevCodeProp: props.code };
     }
@@ -22,11 +25,7 @@ class CodeEditor extends Component {
     return null;
   }
 
-  state = {
-    code: ''
-  };
-
-  updateContent = code => {
+  updateContent = (code: string): void => {
     this.setState({ code }, () => {
       if (this.props.onChange) {
         this.props.onChange(this.state.code);
@@ -34,7 +33,7 @@ class CodeEditor extends Component {
     });
   };
 
-  highlightCode = code => (
+  highlightCode = (code: string) => (
     <Highlight
       Prism={Prism}
       code={code}
@@ -42,7 +41,7 @@ class CodeEditor extends Component {
       language={this.props.language}
     >
       {({ tokens, getLineProps, getTokenProps }) => (
-        <Fragment>
+        <>
           {tokens.map((line, i) => (
             // eslint-disable-next-line react/jsx-key
             <div {...getLineProps({ line, key: i })}>
@@ -52,7 +51,7 @@ class CodeEditor extends Component {
               ))}
             </div>
           ))}
-        </Fragment>
+        </>
       )}
     </Highlight>
   );
@@ -69,8 +68,8 @@ class CodeEditor extends Component {
     } = this.props;
     const { code } = this.state;
 
-    const baseTheme =
-      theme && typeof theme.plain === 'object' ? theme.plain : {};
+    const baseTheme: React.CSSProperties =
+      theme && typeof theme.plain === 'object' ? theme.plain : ({} as any);
 
     return (
       <Editor
@@ -82,12 +81,10 @@ class CodeEditor extends Component {
           whiteSpace: 'pre',
           fontFamily: 'monospace',
           ...baseTheme,
-          ...style
+          ...style,
         }}
         {...rest}
       />
     );
   }
 }
-
-export default CodeEditor;

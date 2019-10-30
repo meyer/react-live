@@ -1,26 +1,46 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
+import * as React from 'react';
 
-import LiveContext from './LiveContext';
-import { generateElement, renderElementAsync } from '../../utils/transpile';
+import { LiveContext } from './LiveContext';
+import {
+  generateElement,
+  renderElementAsync,
+  RenderElementAsyncParams,
+} from '../utils/transpile';
+import { Language, PrismTheme } from 'prism-react-renderer';
+import { ErrorBoundary } from '../utils/transpile/errorBoundary';
 
-export default class LiveProvider extends Component {
+export interface LiveProviderProps {
+  code: string;
+  disabled?: boolean;
+  language?: Language;
+  noInline?: boolean;
+  scope?: Record<string, any>;
+  theme?: PrismTheme;
+  transformCode?: any;
+}
+
+interface LiveProviderState {
+  element?: ErrorBoundary | null;
+  error?: any;
+  unsafeWrapperError?: any;
+}
+
+interface TranspileOptions {
+  code: string;
+  scope?: Record<string, any>;
+  transformCode?: any;
+  noInline?: boolean;
+}
+
+export class LiveProvider extends React.Component<
+  LiveProviderProps,
+  LiveProviderState
+> {
   static defaultProps = {
     code: '',
     noInline: false,
     language: 'jsx',
-    disabled: false
-  };
-
-  static propTypes = {
-    children: PropTypes.children,
-    code: PropTypes.string,
-    disabled: PropTypes.bool,
-    language: PropTypes.string,
-    noInline: PropTypes.bool,
-    scope: PropTypes.object,
-    theme: PropTypes.object,
-    transformCode: PropTypes.node
+    disabled: false,
   };
 
   // eslint-disable-next-line camelcase
@@ -34,8 +54,8 @@ export default class LiveProvider extends Component {
     code: prevCode,
     scope: prevScope,
     noInline: prevNoInline,
-    transformCode: prevTransformCode
-  }) {
+    transformCode: prevTransformCode,
+  }: LiveProviderProps) {
     const { code, scope, noInline, transformCode } = this.props;
     if (
       code !== prevCode ||
@@ -47,25 +67,29 @@ export default class LiveProvider extends Component {
     }
   }
 
-  onChange = code => {
+  onChange = (code: string): void => {
     const { scope, transformCode, noInline } = this.props;
     this.transpile({ code, scope, transformCode, noInline });
   };
 
-  onError = error => {
+  onError = (error: any): void => {
     this.setState({ error: error.toString() });
   };
 
-  transpile = ({ code, scope, transformCode, noInline = false }) => {
+  transpile = (options: TranspileOptions) => {
+    const { code, scope, transformCode, noInline = false } = options;
+
     // Transpilation arguments
-    const input = {
+    const input: RenderElementAsyncParams = {
       code: transformCode ? transformCode(code) : code,
-      scope
+      scope,
     };
 
-    const errorCallback = err =>
+    const errorCallback = (err: any) =>
       this.setState({ element: undefined, error: err.toString() });
-    const renderElement = element => this.setState({ ...state, element });
+
+    const renderElement = (element: ErrorBoundary) =>
+      this.setState({ ...state, element });
 
     // State reset object
     const state = { unsafeWrapperError: undefined, error: undefined };
@@ -94,7 +118,7 @@ export default class LiveProvider extends Component {
           theme,
           disabled,
           onError: this.onError,
-          onChange: this.onChange
+          onChange: this.onChange,
         }}
       >
         {children}
