@@ -4,7 +4,7 @@ import {
 } from '../hoc/withErrorBoundary';
 import * as React from 'react';
 
-export type TranspileFn = (code: string) => string;
+export type TranspileFn = (code: string) => Promise<string>;
 
 export const evalCode = (code: string, scope: Record<string, any>): any => {
   const scopeKeys = Object.keys(scope);
@@ -12,19 +12,6 @@ export const evalCode = (code: string, scope: Record<string, any>): any => {
   // eslint-disable-next-line no-new-func
   const res = new Function('React', ...scopeKeys, code);
   return res(React, ...scopeValues);
-};
-
-export const generateElement = (
-  { code = '', scope = {} },
-  transform: TranspileFn,
-  errorCallback: (err: any) => void
-) => {
-  // NOTE: Remove trailing semicolon to get an actual expression.
-  const codeTrimmed = code.trim().replace(/;$/, '');
-
-  // NOTE: Workaround for classes and arrow functions.
-  const transformed = transform(`return (${codeTrimmed})`).trim();
-  return withErrorBoundary(evalCode(transformed, scope), errorCallback);
 };
 
 export interface RenderElementAsyncParams {
@@ -37,7 +24,6 @@ export const renderElementAsync = (
   transpile: TranspileFn,
   resultCallback: (result: any) => void,
   errorCallback: (err: any) => void
-  // eslint-disable-next-line consistent-return
 ) => {
   const { code = '', scope = {} } = params;
 
@@ -55,5 +41,7 @@ export const renderElementAsync = (
     );
   }
 
-  evalCode(transpile(code), { ...scope, render });
+  transpile(code)
+    .then(transpiledCode => evalCode(transpiledCode, { ...scope, render }))
+    .catch(errorCallback);
 };
