@@ -1,10 +1,38 @@
+import * as React from 'react';
 import {
   withErrorBoundary,
   ElementOrComponent,
 } from '../hoc/withErrorBoundary';
-import * as React from 'react';
 
-export type TranspileFn = (code: string) => Promise<string>;
+export interface ImportSpecifier {
+  type: 'ImportSpecifier';
+  source: string;
+  local: string;
+  imported: string;
+}
+
+export interface ImportDefaultSpecifier {
+  type: 'ImportDefaultSpecifier';
+  source: string;
+  local: string;
+}
+
+export interface ImportNamespaceSpecifier {
+  type: 'ImportNamespaceSpecifier';
+  source: string;
+  local: string;
+}
+
+export interface TranspileResult {
+  code: string;
+  imports: Array<
+    ImportSpecifier | ImportDefaultSpecifier | ImportNamespaceSpecifier
+  >;
+}
+
+export type TranspileFn = (code: string) => Promise<TranspileResult>;
+
+export type GetScopeFn = (res: TranspileResult) => Promise<Record<string, any>>;
 
 export const evalCode = (code: string, scope: Record<string, any>): any => {
   const scopeKeys = Object.keys(scope);
@@ -14,19 +42,13 @@ export const evalCode = (code: string, scope: Record<string, any>): any => {
   return res(React, ...scopeValues);
 };
 
-export interface RenderElementAsyncParams {
-  code: string;
-  scope?: Record<string, any>;
-}
-
 export const renderElementAsync = (
-  params: RenderElementAsyncParams,
+  code: string,
   transpile: TranspileFn,
+  getScope: GetScopeFn,
   resultCallback: (result: any) => void,
   errorCallback: (err: any) => void
 ) => {
-  const { code = '', scope = {} } = params;
-
   const render = (element: ElementOrComponent) => {
     if (typeof element === 'undefined') {
       errorCallback(new SyntaxError('`render` must be called with valid JSX.'));
@@ -35,13 +57,15 @@ export const renderElementAsync = (
     }
   };
 
-  if (!/render\s*\(/.test(code)) {
-    return errorCallback(
-      new SyntaxError('No-Inline evaluations must call `render`.')
-    );
-  }
-
   transpile(code)
-    .then(transpiledCode => evalCode(transpiledCode, { ...scope, render }))
+    .then(transpiledCode => {
+      return getScope(transpiledCode).then(scope => {
+        return evalCode(transpiledCode.code, {
+          ...scope,
+          transpiledCode,
+          render,
+        });
+      });
+    })
     .catch(errorCallback);
 };

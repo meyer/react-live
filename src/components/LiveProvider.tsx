@@ -3,8 +3,8 @@ import * as React from 'react';
 import { LiveContext } from './LiveContext';
 import {
   renderElementAsync,
-  RenderElementAsyncParams,
   TranspileFn,
+  GetScopeFn,
 } from '../utils/transpile';
 import { Language, PrismTheme } from 'prism-react-renderer';
 import { ErrorBoundary } from '../hoc/withErrorBoundary';
@@ -16,6 +16,7 @@ export interface LiveProviderProps {
   scope?: Record<string, any>;
   theme?: PrismTheme;
   transpile: TranspileFn;
+  getScope: GetScopeFn;
 }
 
 interface LiveProviderState {
@@ -28,6 +29,7 @@ interface TranspileOptions {
   code: string;
   scope?: Record<string, any>;
   transpile: TranspileFn;
+  getScope: GetScopeFn;
 }
 
 export class LiveProvider extends React.Component<
@@ -42,9 +44,9 @@ export class LiveProvider extends React.Component<
 
   // eslint-disable-next-line camelcase
   UNSAFE_componentWillMount() {
-    const { code, scope, transpile } = this.props;
+    const { code, scope, transpile, getScope } = this.props;
 
-    this.transpile({ code, scope, transpile });
+    this.transpile({ code, scope, transpile, getScope });
   }
 
   componentDidUpdate({
@@ -52,19 +54,19 @@ export class LiveProvider extends React.Component<
     scope: prevScope,
     transpile: prevTranspile,
   }: LiveProviderProps) {
-    const { code, scope, transpile } = this.props;
+    const { code, scope, transpile, getScope } = this.props;
     if (
       code !== prevCode ||
       scope !== prevScope ||
       transpile !== prevTranspile
     ) {
-      this.transpile({ code, scope, transpile });
+      this.transpile({ code, scope, transpile, getScope });
     }
   }
 
   onChange = (code: string): void => {
-    const { scope, transpile } = this.props;
-    this.transpile({ code, scope, transpile });
+    const { scope, transpile, getScope } = this.props;
+    this.transpile({ code, scope, transpile, getScope });
   };
 
   onError = (error: any): void => {
@@ -72,10 +74,7 @@ export class LiveProvider extends React.Component<
   };
 
   transpile = (options: TranspileOptions) => {
-    const { code, scope, transpile } = options;
-
-    // Transpilation arguments
-    const input: RenderElementAsyncParams = { code, scope };
+    const { code, transpile, getScope } = options;
 
     const errorCallback = (err: any) =>
       this.setState({ element: undefined, error: err.toString() });
@@ -88,7 +87,13 @@ export class LiveProvider extends React.Component<
 
     try {
       this.setState({ ...state, element: null }); // Reset output for async (no inline) evaluation
-      renderElementAsync(input, transpile, renderElement, errorCallback);
+      renderElementAsync(
+        code,
+        transpile,
+        getScope,
+        renderElement,
+        errorCallback
+      );
     } catch (error) {
       this.setState({ ...state, error: error.toString() });
     }

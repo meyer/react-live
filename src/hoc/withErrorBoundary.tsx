@@ -14,7 +14,8 @@ export const withErrorBoundary = (
     }
 
     render() {
-      return React.isValidElement(elementOrComponent)
+      return typeof elementOrComponent === 'number' ||
+        React.isValidElement(elementOrComponent)
         ? elementOrComponent
         : React.createElement(elementOrComponent);
     }
